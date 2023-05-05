@@ -3,8 +3,9 @@ import pygame_gui
 import openai
 from gtts import gTTS
 from io import BytesIO
+from personal_key import API_KEY
 
-openai.api_key = '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'
+openai.api_key = API_KEY
 
 messages = []
 
