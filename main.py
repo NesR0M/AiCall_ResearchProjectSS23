@@ -216,7 +216,23 @@ while running:
                 is_recording = False
                 recording_thread.join()
                 save_audio_to_file()
-        
+
+                #send file to whisper
+                audio_file= open("output.wav", "rb")
+                transcript = openai.Audio.transcribe("whisper-1", audio_file)
+                TEXT_INPUT.set_text(transcript.text)
+                #TODO event.type = pygame_gui.UI_TEXT_ENTRY_FINISHED
+
+
+                print(transcript.text)
+              
+                # messages.append({"role": "user", "content": transcript.text})
+                # response = openai.ChatCompletion.create(
+                #     model="gpt-3.5-turbo",
+                #     messages=messages)
+                # output = response["choices"][0]["message"]["content"]
+                # messages.append({"role": "assistant", "content": output})
+
     UI_MANAGER.process_events(event)
     
     UI_MANAGER.update(UI_REFRESH_RATE)
