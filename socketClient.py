@@ -33,6 +33,8 @@ def demo():
 
     # Rename the new PNG file
     new_name = "images/output_0.png"
+    if os.path.exists(new_name):
+        os.remove(new_name)
     os.rename(dst_file, new_name)
 
 def stablePicture(iteration, imagePrompt):
