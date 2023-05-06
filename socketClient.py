@@ -1,4 +1,5 @@
 import socket
+import os
 from personal_key import PICTURE_HOST, PICTURE_PORT 
 
 def receive_image(server_socket, image_path):
@@ -16,17 +17,40 @@ def receive_image(server_socket, image_path):
         
     print(f'Image received and saved as {image_path}')
 
+def demo():
+    # Set the source file path
+    src_file = "images/example.png"
+
+    # Set the destination file path
+    dst_file = "images/copy_example.png"
+
+    # Open the source PNG file for reading
+    with open(src_file, 'rb') as fsrc:
+        # Open the destination PNG file for writing
+        with open(dst_file, 'wb') as fdst:
+            # Copy the contents of the source file to the destination file
+            fdst.write(fsrc.read())
+
+    # Rename the new PNG file
+    new_name = "images/output_0.png"
+    os.rename(dst_file, new_name)
+
 def stablePicture(iteration, imagePrompt):
     host = PICTURE_HOST
     port = PICTURE_PORT
     image_path = f'images/output_{iteration}.png'
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.connect((host, port))
-    print(f'Connected to server: {host}:{port}')
+    try:
+        server_socket.connect((host, port))
+        print(f'Connected to server: {host}:{port}')
+        server_socket.sendall(imagePrompt.encode())  # Send the message to the server
 
-    server_socket.sendall(imagePrompt.encode())  # Send the message to the server
+        receive_image(server_socket, image_path)
+        server_socket.close()
+    except:
+        # code to handle the exception
+        demo()
 
-    receive_image(server_socket, image_path)
-    server_socket.close()
+    
 

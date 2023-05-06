@@ -5,7 +5,6 @@ import threading
 import pyaudio
 import wave
 from gtts import gTTS
-from io import BytesIO
 import win32com.client as wincl
 from personal_key import API_KEY
 from socketClient import stablePicture
@@ -183,6 +182,8 @@ while running:
         if (event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and
             event.ui_object_id == '#text_entry' and promptSet):
 
+            print("Answer is triggerd")
+
             if event.text == "stop":
                    running = False
                    break
@@ -235,6 +236,7 @@ while running:
                 audio_file= open("output.wav", "rb")
                 transcript = openai.Audio.transcribe("whisper-1", audio_file)
                 TEXT_INPUT.set_text(transcript.text)
+                TEXT_INPUT.focus()
                 #TODO event.type = pygame_gui.UI_TEXT_ENTRY_FINISHED
 
 
