@@ -231,7 +231,7 @@ while running:
                 is_recording = False
                 recording_thread.join()
                 save_audio_to_file()
-
+                
                 #send file to whisper
                 audio_file= open("output.wav", "rb")
                 transcript = openai.Audio.transcribe("whisper-1", audio_file)
