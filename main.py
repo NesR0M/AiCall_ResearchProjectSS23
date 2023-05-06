@@ -5,7 +5,7 @@ from gtts import gTTS
 from io import BytesIO
 from personal_key import API_KEY
 from socketClient import stablePicture
-from prompting import imageGen, imageGen2, imageGen3, imageGen4
+from prompting import imageGen, imageGen2, imageGen3, imageGen4, imageGenPreface, scenario
 
 openai.api_key = API_KEY
 
@@ -16,8 +16,10 @@ pygame.init()
 pygame.mixer.init()
 
 # Set up the display
-screen_width = 1152
-screen_height = 768
+screen_width = 800
+screen_height = 600
+#TODO USE screen_width = 1152
+#TODO USE screen_height = 768
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 # Set the title of the window
@@ -25,7 +27,6 @@ pygame.display.set_caption("Sex II")
 
 # Set up the game clock
 CLOCK = pygame.time.Clock()
-UI_REFRESH_RATE = CLOCK.tick(60)/1000
 
 # Initialize the pygame_gui UIManager
 UI_MANAGER = pygame_gui.UIManager((screen_width, screen_height))
@@ -39,8 +40,8 @@ record_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((button_x
                                              manager=UI_MANAGER)
 
 # Create a Textfield
-# TEXT_INPUT = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((20, screen_height - 70), (screen_width - 40 - button_size[0], 50)), manager=UI_MANAGER, object_id='#text_entry')
-
+TEXT_INPUT = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((20, screen_height - 70), (screen_width - 40 - button_size[0], 50)), manager=UI_MANAGER, object_id='#text_entry')
+TEXT_INPUT.focus()
 
 # Set up image as background
 # def setbackground(iteration):
@@ -50,13 +51,13 @@ screen.fill(background_color)
 
 
 # Set up textfield variables
-textfield_rect = pygame.Rect(20, screen_height - 70, screen_width - 40 - button_size[0] - 10, 50)
-textfield_color = (255, 255, 255)
-textfield_text = ""
-textfield_font = pygame.font.Font(None, 40)
+# textfield_rect = pygame.Rect(20, screen_height - 70, screen_width - 40 - button_size[0] - 10, 50)
+# textfield_color = (255, 255, 255)
+# textfield_text = ""
+# textfield_font = pygame.font.Font(None, 40)
 
 # Load the image
-#image = pygame.image.load("image.png")
+# image = pygame.image.load("image.png")
 
 # Get the dimensions of the image
 # image_width = image.get_width()
@@ -78,15 +79,16 @@ pygame.display.flip()
 
 
 # One time GPT Call:
-def askGPT(structure, appendix, prompt):
+def askGPT(structure, preface, prompt):
     task = []
     task.append({"role": "user", "content": structure+prompt}) # task: "Create a stable diffusion prompt out of this: "
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=task)
     output = response["choices"][0]["message"]["content"]
-    print("The Stable prompt is: " + output + appendix)
-    return output + appendix
+    usedprompt = preface + output
+    print("The Stable prompt is: " + usedprompt)
+    return usedprompt
 
 # Load an image:
 def loadImage(name):
@@ -101,84 +103,79 @@ promptSet = False
 iteration = 0
 
 while running:
-    # Handle events
+    UI_REFRESH_RATE = CLOCK.tick(60)/1000
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.USEREVENT:
+        if (event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and
+            event.ui_object_id == '#text_entry' and not promptSet):
+
+            # Process the entered text
+            print("The prompt is: "+ event.text)
+            messages.append({"role": "system", "content": scenario + event.text}) # Prompt
+            promptSet = True
+
+            # Let Stable Diffusion create an Image
+            stablePicture(iteration,askGPT(imageGen4, imageGenPreface,event.text))
+            # Set background Image:
+            loadImage("output_"+str(iteration))
+
+            TEXT_INPUT.set_text("")
+            TEXT_INPUT.redraw()
+            iteration += 1
+
+            print("The conversation is starting...")
+
+        if (event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and
+            event.ui_object_id == '#text_entry' and promptSet):
+
+            if event.text == "stop":
+                   running = False
+                   break
+            messages.append({"role": "user", "content": event.text})
+            
+            TEXT_INPUT.set_text("")
+            TEXT_INPUT.redraw()
+
+            UI_MANAGER.draw_ui(screen)
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                # max_tokens= 30,
+                messages=messages)
+            output = response["choices"][0]["message"]["content"]
+            messages.append({"role": "assistant", "content": output})
+            print("\n" + output + "\n")
+            #TODO Add text to Textfield
+
+            #TTS:
+            mp3_fp = BytesIO()
+            tts = gTTS(output, lang='en')
+            tts.write_to_fp(mp3_fp)
+            mp3_fp.seek(0)
+            pygame.mixer.music.load(mp3_fp, 'mp3')
+            pygame.mixer.music.play()
+
+            # TODO DEL while pygame.mixer.music.get_busy():
+            # TODO DEL    pygame.time.wait(100)
+
+        if event.type == pygame.USEREVENT:
             if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == record_button:
                     # Button pressed, perform the desired action
                     print("Record button pressed.")
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_BACKSPACE:
-                # Remove the last character from the textfield
-                textfield_text = textfield_text[:-1]
-            elif event.key == pygame.K_RETURN and not promptSet:
-                # Process the entered text
-                print("The prompt is: "+ textfield_text)
-                messages.append({"role": "system", "content": textfield_text}) # Prompt
-                promptSet = True
-
-                # Let Stable Diffusion create an Image
-                stablePicture(iteration,askGPT(imageGen4, ",cowboy shot",textfield_text))
-                # Set background Image:
-                loadImage("output_"+str(iteration))
-
-                textfield_text = ""
-                iteration += 1
-
-                print("The conversation is starting...")
-            elif event.key == pygame.K_RETURN and promptSet:
-                if textfield_text == "stop":
-                   running = False
-                   break
-                messages.append({"role": "user", "content": textfield_text})
-                textfield_text = ""
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=messages)
-                output = response["choices"][0]["message"]["content"]
-                messages.append({"role": "assistant", "content": output})
-                print("\n" + output + "\n")
-                #TODO Add text to Textfield
-
-                #TTS:
-                mp3_fp = BytesIO()
-                tts = gTTS(output, lang='en')
-                tts.write_to_fp(mp3_fp)
-                mp3_fp.seek(0)
-                pygame.mixer.music.load(mp3_fp, 'mp3')
-                pygame.mixer.music.play()
-
-                while pygame.mixer.music.get_busy():
-                    pygame.time.wait(100)
-
-            else:
-                # Add the entered character to the textfield
-                textfield_text += event.unicode
-
-        # Pass events to the UI manager
-        UI_MANAGER.process_events(event)
-
-    # Update game logic
-
-    # Update the UI manager
+        
+    UI_MANAGER.process_events(event)
+    
     UI_MANAGER.update(UI_REFRESH_RATE)
-
-    # Draw to the screen
-    #TODO DEL old: screen.blit(image, (image_x, image_y))
-    pygame.draw.rect(screen, (255, 255, 255), textfield_rect)  # Draw the textfield background
-    pygame.draw.rect(screen, (0, 0, 0), textfield_rect, 2)  # Draw the textfield border
-    text_surface = textfield_font.render(textfield_text, True, (0, 0, 0))  # Render the text
-    screen.blit(text_surface, (textfield_rect.x + 10, textfield_rect.y + 10))  # Draw the text to the screen
     UI_MANAGER.draw_ui(screen)  # Draw the UI elements
 
     # Update the display
     pygame.display.update()
 
     # Cap the frame rate to 60 FPS
-    CLOCK.tick(60)
+    # CLOCK.tick(60)
+
 
 # Quit Pygame
 pygame.quit()
