@@ -6,6 +6,7 @@ import pyaudio
 import wave
 from gtts import gTTS
 from io import BytesIO
+import win32com.client as wincl
 from personal_key import API_KEY
 from socketClient import stablePicture
 from prompting import imageGen4, imageGenPreface, scenario
@@ -17,6 +18,16 @@ messages = []
 # Initialize Pygame
 pygame.init()
 pygame.mixer.init()
+
+# create a TTS engine using Windows 10 integrated TTS
+tts_engine = wincl.Dispatch("SAPI.SpVoice")
+for voice in tts_engine.GetVoices():
+    if voice.GetDescription().startswith('Microsoft Zira'):
+        tts_engine.Voice = voice
+        break
+tts_engine.Rate = 0
+tts_engine.Volume = 30
+
 
 # Set up the display
 screen_width = 800
@@ -190,13 +201,16 @@ while running:
             print("\n" + output + "\n")
             #TODO Add text to Textfield
 
-            #TTS:
-            mp3_fp = BytesIO()
-            tts = gTTS(output, lang='en')
-            tts.write_to_fp(mp3_fp)
-            mp3_fp.seek(0)
-            pygame.mixer.music.load(mp3_fp, 'mp3')
-            pygame.mixer.music.play()
+            #TTS Windows:
+            tts_engine.Speak(output)
+
+            #TTS Google:
+            # mp3_fp = BytesIO()
+            # tts = gTTS(output, lang='en')
+            # tts.write_to_fp(mp3_fp)
+            # mp3_fp.seek(0)
+            # pygame.mixer.music.load(mp3_fp, 'mp3')
+            # pygame.mixer.music.play()
 
             # TODO DEL while pygame.mixer.music.get_busy():
             # TODO DEL    pygame.time.wait(100)
@@ -246,4 +260,5 @@ while running:
 
 
 # Quit Pygame
+pygame.mixer.quit()
 pygame.quit()
