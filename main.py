@@ -4,6 +4,8 @@ import openai
 from gtts import gTTS
 from io import BytesIO
 from personal_key import API_KEY
+from socketClient import stablePicture
+from prompting import imageGen
 
 openai.api_key = API_KEY
 
@@ -19,7 +21,7 @@ screen_height = 600
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 # Set the title of the window
-pygame.display.set_caption("My Pygame")
+pygame.display.set_caption("Sex II")
 
 # Set up the game clock
 clock = pygame.time.Clock()
@@ -36,6 +38,7 @@ record_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((button_x
                                              manager=ui_manager)
 
 # Set up image as background
+# def setbackground(iteration):
 background_image = pygame.image.load("background.jpg")
 window_size = (800, 600)
 background_image = pygame.transform.scale(background_image, window_size)
@@ -69,8 +72,22 @@ screen.blit(image, (image_x, image_y))
 # Update the screen
 pygame.display.flip()
 
+
+# One time GPT Call:
+def askGPT(structure,prompt):
+    task = []
+    task.append({"role": "user", "content": structure+prompt}) # task: "Create a stable diffusion prompt out of this: "
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=task)
+    output = response["choices"][0]["message"]["content"]
+    print("The Stable prompt is: " + output)
+    return output
+
+
 running = True
 promptSet = False
+
 while running:
     # Handle events
     for event in pygame.event.get():
@@ -89,8 +106,11 @@ while running:
                 # Process the entered text
                 print("The prompt is: "+ textfield_text)
                 messages.append({"role": "system", "content": textfield_text}) # Prompt
-                textfield_text = ""
                 promptSet = True
+
+                stablePicture(0,askGPT(imageGen, textfield_text))
+                textfield_text = ""
+                # TODO ADD setbackground(0)
                 print("The conversation is starting...")
             elif event.key == pygame.K_RETURN and promptSet:
                 if textfield_text == "stop":
@@ -130,8 +150,7 @@ while running:
     ui_manager.update(clock.tick(60))
 
     # Draw to the screen
-    screen.blit(background_image, (0, 0))
-    screen.blit(image, (image_x, image_y))
+    #TODO DEL old: screen.blit(image, (image_x, image_y))
     pygame.draw.rect(screen, (255, 255, 255), textfield_rect)  # Draw the textfield background
     pygame.draw.rect(screen, (0, 0, 0), textfield_rect, 2)  # Draw the textfield border
     text_surface = textfield_font.render(textfield_text, True, (0, 0, 0))  # Render the text

@@ -1,0 +1,1 @@
+imageGen = "Give me a description of objects in the background in single words, delimited by comma, in this style: portrait of beautiful girl, ethereal, realistic anime, trending on pixiv, detailed, clean lines, sharp lines, crisp lines, award winning illustration, masterpiece, eugene de blaas and ross tran, vibrant color scheme, intricately detailed from this prompt: "
