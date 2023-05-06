@@ -1,11 +1,14 @@
 import pygame
 import pygame_gui
 import openai
+import threading
+import pyaudio
+import wave
 from gtts import gTTS
 from io import BytesIO
 from personal_key import API_KEY
 from socketClient import stablePicture
-from prompting import imageGen, imageGen2, imageGen3, imageGen4, imageGenPreface, scenario
+from prompting import imageGen4, imageGenPreface, scenario
 
 openai.api_key = API_KEY
 
@@ -37,14 +40,16 @@ button_x = screen_width - button_size[0] - 20
 button_y = screen_height - 70
 record_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((button_x, button_y), button_size),
                                              text="Record",
+                                             object_id='#record_button',
                                              manager=UI_MANAGER)
 
 # Create a Textfield
-TEXT_INPUT = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((20, screen_height - 70), (screen_width - 40 - button_size[0], 50)), manager=UI_MANAGER, object_id='#text_entry')
+TEXT_INPUT = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((20, screen_height - 70),
+                                                                            (screen_width - 40 - button_size[0], 50)),
+                                                                              manager=UI_MANAGER, object_id='#text_entry')
 TEXT_INPUT.focus()
 
-# Set up image as background
-# def setbackground(iteration):
+# Set up background
 window_size = (screen_width, screen_height)
 background_color = (0, 0, 0)
 screen.fill(background_color)
@@ -97,10 +102,47 @@ def loadImage(name):
     screen.blit(background_image, (0, 0))
     pygame.display.update()
 
+# Set up audio recording parameters
+chunk = 1024
+format = pyaudio.paInt16
+channels = 1
+rate = 44100
+filename = 'output.wav'
+
+def record_audio():
+    global audio_frames, is_recording
+    audio_frames = []
+    p = pyaudio.PyAudio()
+
+    stream = p.open(format=format,
+                    channels=channels,
+                    rate=rate,
+                    input=True,
+                    frames_per_buffer=chunk)
+
+    while is_recording:
+        data = stream.read(chunk)
+        audio_frames.append(data)
+
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+
+def save_audio_to_file():
+    wf = wave.open(filename, 'wb')
+    wf.setnchannels(channels)
+    wf.setsampwidth(pyaudio.get_sample_size(format))
+    wf.setframerate(rate)
+    wf.writeframes(b''.join(audio_frames))
+    wf.close()
+
 
 running = True
 promptSet = False
 iteration = 0
+
+audio_frames = []
+is_recording = False
 
 while running:
     UI_REFRESH_RATE = CLOCK.tick(60)/1000
@@ -134,7 +176,7 @@ while running:
                    running = False
                    break
             messages.append({"role": "user", "content": event.text})
-            
+
             TEXT_INPUT.set_text("")
             TEXT_INPUT.redraw()
 
@@ -159,11 +201,21 @@ while running:
             # TODO DEL while pygame.mixer.music.get_busy():
             # TODO DEL    pygame.time.wait(100)
 
-        if event.type == pygame.USEREVENT:
-            if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
-                if event.ui_element == record_button:
-                    # Button pressed, perform the desired action
-                    print("Record button pressed.")
+        
+        if (event.type == pygame_gui.UI_BUTTON_PRESSED and
+            event.ui_object_id == '#record_button'):
+
+            # Button pressed, perform the desired action
+            if not is_recording:
+                record_button.set_text("Recording...")
+                is_recording = True
+                recording_thread = threading.Thread(target=record_audio)
+                recording_thread.start()
+            else:
+                record_button.set_text("Record")
+                is_recording = False
+                recording_thread.join()
+                save_audio_to_file()
         
     UI_MANAGER.process_events(event)
     
