@@ -9,6 +9,9 @@ from prompting import imageGen
 
 openai.api_key = API_KEY
 
+# 62.116.57.179
+# PORT
+
 messages = []
 
 # Initialize Pygame
