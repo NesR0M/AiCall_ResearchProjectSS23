@@ -16,7 +16,7 @@ def send_image(client_socket, image_path):
     client_socket.sendall(image_data)  # Send the image data to the client
 
 def main():
-    host = PICTURE_HOST
+    host = ''
     port = PICTURE_PORT
     image_path = 'output.png'
 
