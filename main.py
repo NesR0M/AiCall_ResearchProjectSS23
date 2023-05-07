@@ -25,7 +25,7 @@ for voice in tts_engine.GetVoices():
         tts_engine.Voice = voice
         break
 tts_engine.Rate = 0
-tts_engine.Volume = 30
+tts_engine.Volume = 100
 
 
 # Set up the display
