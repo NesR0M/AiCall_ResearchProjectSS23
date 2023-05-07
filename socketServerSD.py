@@ -1,11 +1,11 @@
 import socket
-import json
 import requests
 import io
 import base64
 from PIL import Image, PngImagePlugin
+from personal_key import PICTURE_HOST, PICTURE_PORT, STABLE_URL
 
-url = "http://127.0.0.1:7860"
+url = STABLE_URL
 
 def send_image(client_socket, image_path):
     with open(image_path, 'rb') as file:
@@ -15,8 +15,8 @@ def send_image(client_socket, image_path):
     client_socket.sendall(image_data)  # Send the image data to the client
 
 def main():
-    host = ''
-    port = 12345
+    host = PICTURE_HOST
+    port = PICTURE_PORT
     image_path = 'output.png'
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -47,20 +47,24 @@ def main():
             "negative_prompt": "EasyNegativeV2, badhandv4",
             "eta": 31337,
         }
+        print(f'{url}/sdapi/v1/txt2img')
         response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
+        #response = requests.post(url="http://127.0.0.1:7860/sdapi/v1/txt2img", json=payload)
         r = response.json()
+        print(r)
         for i in r['images']:
             image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
             png_payload = {
                 "image": "data:image/png;base64," + i
             }
-            response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
-            pnginfo = PngImagePlugin.PngInfo()
-            pnginfo.add_text("parameters", response2.json().get("info"))
-            image.save('output.png', pnginfo=pnginfo)
+            # response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+            # pnginfo = PngImagePlugin.PngInfo()
+            # pnginfo.add_text("parameters", response2.json().get("info"))
+            image.save('output.png') #, pnginfo=pnginfo
         
         send_image(client_socket, image_path)
         client_socket.close()
+        print(f'{url}/sdapi/v1/txt2img')
 
 if __name__ == '__main__':
     main()
