@@ -8,11 +8,13 @@ from gtts import gTTS
 import win32com.client as wincl
 from personal_key import API_KEY
 from socketClient import stablePicture
-from prompting import imageGen4, imageGenPreface, scenario
+from prompting import imageGen4, imageGen5_1, imageGen6, imageGenForcedPreface, scenario
 
 openai.api_key = API_KEY
 
 messages = []
+imageGen = imageGen6
+useImageGenPreface = False
 
 # Initialize Pygame
 pygame.init()
@@ -117,7 +119,7 @@ chunk = 1024
 format = pyaudio.paInt16
 channels = 1
 rate = 44100
-filename = 'output.wav'
+filename = 'sound/output.wav'
 
 def record_audio():
     global audio_frames, is_recording
@@ -169,7 +171,11 @@ while running:
             promptSet = True
 
             # Let Stable Diffusion create an Image
-            stablePicture(iteration,askGPT(imageGen4, imageGenPreface,event.text))
+            if useImageGenPreface:
+                stablePicture(iteration,askGPT(imageGen, imageGenForcedPreface,event.text))
+            else:
+                stablePicture(iteration,askGPT(imageGen, "",event.text))
+
             # Set background Image:
             loadImage("output_"+str(iteration))
 
@@ -233,7 +239,7 @@ while running:
                 save_audio_to_file()
                 
                 #send file to whisper
-                audio_file= open("output.wav", "rb")
+                audio_file= open("sound/output.wav", "rb")
                 transcript = openai.Audio.transcribe("whisper-1", audio_file)
                 TEXT_INPUT.set_text(transcript.text)
                 TEXT_INPUT.focus()
