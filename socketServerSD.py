@@ -4,6 +4,7 @@ import io
 import base64
 from PIL import Image, PngImagePlugin
 from personal_key import PICTURE_HOST, PICTURE_PORT, STABLE_URL
+from prompting import stableDifpayload
 
 url = STABLE_URL
 
@@ -29,26 +30,8 @@ def main():
         print(f'Connected to client: {address[0]}:{address[1]}')
         prompt = client_socket.recv(1024).decode()  # Receive the message from the client
 
-        payload = {
-            "enable_hr": True,
-            "denoising_strength": 0.52,
-            "firstphase_width": 768,
-            "firstphase_height": 512,
-            "hr_scale": 2,
-            "hr_upscaler": "Latent",
-            "hr_second_pass_steps": 20,
-            "prompt": prompt,
-            "seed": -1,
-            "sampler_name": "DPM++ 2M Karras",
-            "steps": 25,
-            "cfg_scale": 10,
-            "width": 768,
-            "height": 512,
-            "negative_prompt": "EasyNegativeV2, badhandv4",
-            "eta": 31337,
-        }
         print(f'{url}/sdapi/v1/txt2img')
-        response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
+        response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=stableDifpayload(prompt))
         #response = requests.post(url="http://127.0.0.1:7860/sdapi/v1/txt2img", json=payload)
         r = response.json()
         print(r)
@@ -57,10 +40,10 @@ def main():
             png_payload = {
                 "image": "data:image/png;base64," + i
             }
-            # response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
-            # pnginfo = PngImagePlugin.PngInfo()
-            # pnginfo.add_text("parameters", response2.json().get("info"))
-            image.save('output.png') #, pnginfo=pnginfo
+            response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+            pnginfo = PngImagePlugin.PngInfo()
+            pnginfo.add_text("parameters", response2.json().get("info"))
+            image.save('output.png', pnginfo=pnginfo)
         
         send_image(client_socket, image_path)
         client_socket.close()
