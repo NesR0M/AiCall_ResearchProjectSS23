@@ -5,6 +5,7 @@ import base64
 from PIL import Image, PngImagePlugin
 from personal_key import PICTURE_PORT, STABLE_URL
 from prompting import stableDifpayload
+from prompting import imageGen6
 
 url = STABLE_URL
 
@@ -33,4 +34,5 @@ if __name__ == '__main__':
     # parser = argparse.ArgumentParser()
     # parser.add_argument('-p', '--parameter', help='Parameter for main function', required=True)
     # args = parser.parse_args()
-    main("ENTER A PROMPT TO TEST")
+
+    main("ADD YOUR TEST PROMPT HERE")

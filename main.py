@@ -8,13 +8,13 @@ from gtts import gTTS
 import win32com.client as wincl
 from personal_key import API_KEY
 from socketClient import stablePicture
-from prompting import imageGen4, imageGen5_1, imageGen6, imageGenForcedPreface, scenario
+from prompting import imageGen4, imageGen8, imageGen6_1, imageGenForcedPreface, scenario
 
 openai.api_key = API_KEY
 
 messages = []
-imageGen = imageGen6
-useImageGenPreface = False
+imageGen = imageGen8
+useImageGenPreface = True
 
 # Initialize Pygame
 pygame.init()
@@ -38,7 +38,7 @@ screen_height = 600
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 # Set the title of the window
-pygame.display.set_caption("Sex II")
+pygame.display.set_caption("Research Project Pygame")
 
 # Set up the game clock
 CLOCK = pygame.time.Clock()

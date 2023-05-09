@@ -1,0 +1,18 @@
+- Elements that need to be described (10) : Subject(s), setting, composition, perspective, lighting, colors, textures, emotions, actions and interactions, style
+- 20 Background items
+- Original Prompt in the same style
+
+
+
+- give an example
+
+
+As a professional artist, seeking single-word responses, separated by commas, to conjure a vivid scene embodying the essence of dialogue using GPT3. 
+
+Choose between a '1girl' or '1boy' (at your discretion) as the focal point.  Here is an example of how it should look like: 
+
+'(1girl:1.1), Captivating, Banter, Espresso, Gelato, Frescoes, Piazza, Tarantella, Tuscan Hills, Truffles, Colosseum, Pasta, Gondola, Roman Forum, Heritage, La Scala Opera, Trevi Fountain, Cannoli, Aperitivo, Prosciutto, Vespa, Dante, Mediterranean, Wolf, Murano Glass, Amalfi Coast, Uffizi Gallery, Chianti Vineyards, Gladiator, Villa, Italian Renaissance, Michelangelo, Venetian Masks, Vatican City, Caravaggio, Sistine Chapel, Republic of Italy' Create those words using this structure: '
+
+Setting, time of day, season, weather, light, colors, textures, shapes, lines, perspective, foreground, middleground, background, scale, proportion, focal point, movement, space, contrast, repetition, unity, balance, atmosphere, flora, fauna, architecture, water features, sky, natural elements, human activity, transportation, cultural context, style, technique, artist's intention' 
+
+Now offer 35 singleword, delimited by comma evocative terms to craft a similar atmosphere build on this sentence:"
