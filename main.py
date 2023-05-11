@@ -4,11 +4,17 @@ import openai
 import threading
 import pyaudio
 import wave
-from gtts import gTTS
-import win32com.client as wincl
 from personal_key import API_KEY
 from socketClient import stablePicture
 from prompting import imageGen4, imageGen8, imageGen6_1, imageGenForcedPreface, scenario
+
+
+useWindowsSound = False
+if(useWindowsSound):
+    import win32com.client as wincl
+else:
+    from gtts import gTTS
+
 
 openai.api_key = API_KEY
 
@@ -208,19 +214,17 @@ while running:
             print("\n" + output + "\n")
             #TODO Add text to Textfield
 
-            #TTS Windows:
-            tts_engine.Speak(output)
-
-            #TTS Google:
-            # mp3_fp = BytesIO()
-            # tts = gTTS(output, lang='en')
-            # tts.write_to_fp(mp3_fp)
-            # mp3_fp.seek(0)
-            # pygame.mixer.music.load(mp3_fp, 'mp3')
-            # pygame.mixer.music.play()
-
-            # TODO DEL while pygame.mixer.music.get_busy():
-            # TODO DEL    pygame.time.wait(100)
+            if(useWindowsSound):
+                #TTS Windows:
+                tts_engine.Speak(output)
+            else:
+                #TTS Google:
+                mp3_fp = BytesIO()
+                tts = gTTS(output, lang='en')
+                tts.write_to_fp(mp3_fp)
+                mp3_fp.seek(0)
+                pygame.mixer.music.load(mp3_fp, 'mp3')
+                pygame.mixer.music.play()
 
         
         if (event.type == pygame_gui.UI_BUTTON_PRESSED and

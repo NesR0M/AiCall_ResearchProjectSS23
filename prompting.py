@@ -14,7 +14,7 @@ scenario ="converse with me. dont narrate. I will answer in the following texts.
 def stableDifpayload(prompt):
     payload = {
                 "enable_hr": True,
-                "denoising_strength": 0.58,
+                "denoising_strength": 0.58, #use 0.52 if background elements are weird
                 "firstphase_width": 768,
                 "firstphase_height": 512,
                 "hr_scale": 2,
