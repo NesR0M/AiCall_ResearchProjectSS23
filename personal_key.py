@@ -1,6 +1,6 @@
 API_KEY = ''
 
-#PICTURE_HOST = '62.47.203.83' # mine
-#PICTURE_HOST = '62.116.57.179' # davids
+PICTURE_HOST = '62.47.203.83' # mine
+#PICTURE_HOST = '' # davids
 PICTURE_PORT = 12345
 STABLE_URL = "http://127.0.0.1:7860"

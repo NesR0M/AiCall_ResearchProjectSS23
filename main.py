@@ -6,10 +6,11 @@ import pyaudio
 import wave
 from personal_key import API_KEY
 from socketClient import stablePicture
+from pygame_gui.elements.ui_text_box import UITextBox
 from prompting import imageGen4, imageGen8, imageGen6_1, imageGenForcedPreface, scenario
 
 
-useWindowsSound = False
+useWindowsSound = True
 if(useWindowsSound):
     import win32com.client as wincl
 else:
@@ -19,7 +20,7 @@ else:
 openai.api_key = API_KEY
 
 messages = []
-imageGen = imageGen8
+imageGen = imageGen6_1
 useImageGenPreface = True
 
 # Initialize Pygame
@@ -37,10 +38,10 @@ tts_engine.Volume = 100
 
 
 # Set up the display
-screen_width = 800
-screen_height = 600
-#TODO USE screen_width = 1152
-#TODO USE screen_height = 768
+#original screen_width = 768
+#original screen_height = 512
+screen_width = 1152
+screen_height = 768
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 # Set the title of the window
@@ -66,6 +67,18 @@ TEXT_INPUT = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((20, 
                                                                             (screen_width - 40 - button_size[0], 50)),
                                                                               manager=UI_MANAGER, object_id='#text_entry')
 TEXT_INPUT.focus()
+
+# Create a Output Textfield
+
+textbox_test = ""
+
+output_Textbox = UITextBox(textbox_test,                                            #if html'<font face=fira_code size=2 color=#000000>'
+                             pygame.Rect((20, screen_height - 280), (250, 200)),    #left: float, top: float, width: float, height
+                             manager=UI_MANAGER,
+                                                                                    #object_id=ObjectID(class_id="@white_text_box",
+                                                                                    #object_id="#text_box_2")
+                            )
+output_Textbox.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR)
 
 # Set up background
 window_size = (screen_width, screen_height)
@@ -191,7 +204,24 @@ while running:
 
             print("The conversation is starting...")
 
-        if (event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and
+        if(event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and
+            event.ui_object_id == '#text_entry' and promptSet and event.text[0] == "#"):
+            
+            #Regenerate Picture (same code as above)
+            if useImageGenPreface:
+                stablePicture(iteration,askGPT(imageGen, imageGenForcedPreface,event.text))
+            else:
+                stablePicture(iteration,askGPT(imageGen, "",event.text))
+
+            # Set background Image:
+            loadImage("output_"+str(iteration))
+
+            TEXT_INPUT.set_text("")
+            TEXT_INPUT.redraw()
+            iteration += 1
+            
+
+        elif (event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and
             event.ui_object_id == '#text_entry' and promptSet):
 
             print("Answer is triggerd")
@@ -212,7 +242,9 @@ while running:
             output = response["choices"][0]["message"]["content"]
             messages.append({"role": "assistant", "content": output})
             print("\n" + output + "\n")
-            #TODO Add text to Textfield
+
+            textbox_test = output; #Write into Textbox_Output
+            pygame.display.flip()
 
             if(useWindowsSound):
                 #TTS Windows:
