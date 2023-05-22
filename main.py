@@ -7,7 +7,7 @@ import wave
 from personal_key import API_KEY
 from socketClient import stablePicture
 from pygame_gui.elements.ui_text_box import UITextBox
-from prompting import imageGen4, imageGen8, imageGen6_1, imageGenForcedPreface, scenario
+from prompting import imageGen4, imageGen8, imageGen6_1, imageGenForcedPreface, scenario, scenarioGER
 
 
 useWindowsSound = True
@@ -20,8 +20,8 @@ else:
 openai.api_key = API_KEY
 
 messages = []
-imageGen = imageGen6_1
-useImageGenPreface = True
+imageGen = imageGen8 
+useImageGenPreface = False
 
 # Initialize Pygame
 pygame.init()
@@ -30,7 +30,7 @@ pygame.mixer.init()
 # create a TTS engine using Windows 10 integrated TTS
 tts_engine = wincl.Dispatch("SAPI.SpVoice")
 for voice in tts_engine.GetVoices():
-    if voice.GetDescription().startswith('Microsoft Zira'):
+    if voice.GetDescription().startswith('Microsoft Katja'):
         tts_engine.Voice = voice
         break
 tts_engine.Rate = 0
