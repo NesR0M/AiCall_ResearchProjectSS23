@@ -6,7 +6,9 @@ import pyaudio
 import wave
 from personal_key import API_KEY
 from socketClient import stablePicture
+from pygame.locals import K_LALT
 from pygame_gui.elements.ui_text_box import UITextBox
+from pygame_gui import UI_TEXT_ENTRY_CHANGED
 from prompting import imageGen4, imageGen8, imageGen6_1, imageGenForcedPreface, scenario, scenarioGER
 
 
@@ -66,14 +68,20 @@ record_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((button_x
 TEXT_INPUT = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((20, screen_height - 70),
                                                                             (screen_width - 40 - button_size[0], 50)),
                                                                               manager=UI_MANAGER, object_id='#text_entry')
+
+
+#TEXT_INPUT = pygame_gui.elements.UITextEntryBox(relative_rect=pygame.Rect((20, screen_height - 70),
+#                                                                            (screen_width - 40 - button_size[0], 50)),
+#                                                                              manager=UI_MANAGER, object_id='#text_entry')
+
 TEXT_INPUT.focus()
+
+
 
 # Create a Output Textfield
 
-textbox_test = ""
-
-output_Textbox = UITextBox(textbox_test,                                            #if html'<font face=fira_code size=2 color=#000000>'
-                             pygame.Rect((20, screen_height - 280), (250, 200)),    #left: float, top: float, width: float, height
+output_Textbox = UITextBox("",                                            #if html'<font face=fira_code size=2 color=#000000>'
+                             pygame.Rect((20, screen_height - 480), (250, 400)),    #left: float, top: float, width: float, height
                              manager=UI_MANAGER,
                                                                                     #object_id=ObjectID(class_id="@white_text_box",
                                                                                     #object_id="#text_box_2")
@@ -176,7 +184,7 @@ audio_frames = []
 is_recording = False
 
 while running:
-    UI_REFRESH_RATE = CLOCK.tick(60)/1000
+    UI_REFRESH_RATE = CLOCK.tick(60)/1000.0
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -186,7 +194,7 @@ while running:
 
             # Process the entered text
             print("The prompt is: "+ event.text)
-            messages.append({"role": "system", "content": scenario + event.text}) # Prompt
+            messages.append({"role": "system", "content": scenarioGER + event.text}) # Prompt
             promptSet = True
 
             # Let Stable Diffusion create an Image
@@ -203,6 +211,9 @@ while running:
             iteration += 1
 
             print("The conversation is starting...")
+
+        #DEL if event.type == UI_TEXT_ENTRY_CHANGED and event.ui_object_id == '#text_entry':
+        #DEL    TEXT_INPUT.set_text(event.text)
 
         if(event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and
             event.ui_object_id == '#text_entry' and promptSet and event.text[0] == "#"):
@@ -243,8 +254,9 @@ while running:
             messages.append({"role": "assistant", "content": output})
             print("\n" + output + "\n")
 
-            textbox_test = output; #Write into Textbox_Output
-            pygame.display.flip()
+            output_Textbox.set_text(output) #Write into Textbox_Output
+            UI_MANAGER.draw_ui(screen)  # Draw the UI elements
+            pygame.display.update()  # Update the display
 
             if(useWindowsSound):
                 #TTS Windows:
@@ -259,8 +271,8 @@ while running:
                 pygame.mixer.music.play()
 
         
-        if (event.type == pygame_gui.UI_BUTTON_PRESSED and
-            event.ui_object_id == '#record_button'):
+        if ((event.type == pygame_gui.UI_BUTTON_PRESSED and
+            event.ui_object_id == '#record_button') or (event.type == pygame.KEYDOWN and event.key == K_LALT)):
 
             # Button pressed, perform the desired action
             if not is_recording:
@@ -291,12 +303,9 @@ while running:
                 # output = response["choices"][0]["message"]["content"]
                 # messages.append({"role": "assistant", "content": output})
 
-    UI_MANAGER.process_events(event)
-    
+        UI_MANAGER.process_events(event)
     UI_MANAGER.update(UI_REFRESH_RATE)
-    UI_MANAGER.draw_ui(screen)  # Draw the UI elements
-
-    # Update the display
+    UI_MANAGER.draw_ui(screen) 
     pygame.display.update()
 
     # Cap the frame rate to 60 FPS
