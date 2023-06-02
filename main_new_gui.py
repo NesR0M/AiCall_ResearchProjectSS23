@@ -42,6 +42,10 @@ def tts_thread(output, useWindowsSound, tts_engine):
         pygame.mixer.music.load(mp3_fp)
         pygame.mixer.music.play()
 
+def stablediff_thread(iteration, imageGen, preface, userInput):
+    stablePicture(iteration, askGPT(imageGen, preface, userInput))
+    loadImage("output_"+str(iteration))
+
 
 
 # Initialize Pygame
@@ -59,14 +63,12 @@ tts_engine.Volume = 100
 
 
 # Set up the display
-#original screen_width = 768
-#original screen_height = 512
 screen_width = 1152
 screen_height = 768
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 # Set the title of the window
-pygame.display.set_caption("Research Project Pygame")
+pygame.display.set_caption("ChatWindow")
 
 # Set up the game clock
 CLOCK = pygame.time.Clock()
@@ -110,48 +112,12 @@ record_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((button_x
 TEXT_INPUT.focus()
 
 
-
-#DEL Create a Output Textfield
-
-#output_Textbox = UITextBox("",                                            #if html'<font face=fira_code size=2 color=#000000>'
-#                             pygame.Rect((20, screen_height - 480), (250, 400)),    #left: float, top: float, width: float, height
-#                             manager=UI_MANAGER,
-#                                                                                    #object_id=ObjectID(class_id="@white_text_box",
-#                                                                                    #object_id="#text_box_2")
-#                            )
-#output_Textbox.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR)
-
 # Set up background
 window_size = (screen_width, screen_height)
 background_color = (0, 0, 0)
 screen.fill(background_color)
 
 
-# Set up textfield variables
-# textfield_rect = pygame.Rect(20, screen_height - 70, screen_width - 40 - button_size[0] - 10, 50)
-# textfield_color = (255, 255, 255)
-# textfield_text = ""
-# textfield_font = pygame.font.Font(None, 40)
-
-# Load the image
-# image = pygame.image.load("image.png")
-
-# Get the dimensions of the image
-# image_width = image.get_width()
-# image_height = image.get_height()
-
-# Calculate the center of the screen
-# center_x = screen_width // 2
-# center_y = screen_height // 2
-
-# Calculate the top-left corner of the image
-# image_x = center_x - (image_width // 2)
-# image_y = center_y - (image_height // 2)
-
-# Blit the image to the screen
-# screen.blit(image, (image_x, image_y))
-
-# Update the screen
 pygame.display.flip()
 
 
@@ -233,12 +199,11 @@ while running:
 
             # Let Stable Diffusion create an Image
             if useImageGenPreface:
-                stablePicture(iteration,askGPT(imageGen, imageGenForcedPreface,event.text))
+                thread = threading.Thread(target=stablediff_thread, args=(iteration, imageGen, imageGenForcedPreface, event.text))
+                thread.start()
             else:
-                stablePicture(iteration,askGPT(imageGen, "",event.text))
-
-            # Set background Image:
-            loadImage("output_"+str(iteration))
+                thread = threading.Thread(target=stablediff_thread, args=(iteration, imageGen, "", event.text))
+                thread.start()
 
             TEXT_INPUT.set_text("")
             TEXT_INPUT.redraw()
@@ -246,11 +211,8 @@ while running:
 
             print("The conversation is starting...")
 
-        #DEL if event.type == UI_TEXT_ENTRY_CHANGED and event.ui_object_id == '#text_entry':
-        #DEL    TEXT_INPUT.set_text(event.text)
-
         if(event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and
-            event.ui_object_id == '#text_entry' and promptSet and event.text[0] == "#"):
+            event.ui_object_id == '#text_entry' and promptSet and event.text and event.text[0] == "#"):
 
             text = event.text
 
@@ -260,65 +222,51 @@ while running:
 
             #Regenerate Picture (same code as above)
             if useImageGenPreface:
-                stablePicture(iteration,askGPT(imageGen, imageGenForcedPreface,text))
+                thread = threading.Thread(target=stablediff_thread, args=(iteration, imageGen, imageGenForcedPreface, event.text))
+                thread.start()
             else:
-                stablePicture(iteration,askGPT(imageGen, "",text))
-
-
-            # Set background Image:
-            loadImage("output_"+str(iteration))
+                thread = threading.Thread(target=stablediff_thread, args=(iteration, imageGen, "", event.text))
+                thread.start()
             
 
         elif (event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and
             event.ui_object_id == '#text_entry' and promptSet):
 
-            print("Answer is triggerd")
+            if event.text == "":
+                print("Empty input is skipped")
+            else:
+                print("Answer is triggerd")
 
-            text = event.text
-            print(text)
-            output_Text += "\n<font color=\"#FF0000\">YOU:</font>" +" "+ "<font color=\"#ff8c8c\">" + text +"</font>"
-            output_Textbox.set_text(output_Text) #Write into Textbox_Output
+                text = event.text
+                print(text)
+                output_Text += "\n<font color=\"#FF0000\">YOU:</font>" +" "+ "<font color=\"#ff8c8c\">" + text +"</font>"
+                output_Textbox.set_text(output_Text) #Write into Textbox_Output
 
-            if event.text == "stop":
-                   running = False
-                   break
-            messages.append({"role": "user", "content": text})
+                if event.text == "stop":
+                    running = False
+                    break
+                messages.append({"role": "user", "content": text})
 
-            TEXT_INPUT.set_text("")
-            TEXT_INPUT.redraw()
-            UI_MANAGER.draw_ui(screen)
-            pygame.display.update()
+                TEXT_INPUT.set_text("")
+                TEXT_INPUT.redraw()
+                UI_MANAGER.draw_ui(screen)
+                pygame.display.update()
 
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                # max_tokens= 30,
-                messages=messages)
-            output = response["choices"][0]["message"]["content"]
-            messages.append({"role": "assistant", "content": output})
-            print("\n" + output + "\n")
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    # max_tokens= 30,
+                    messages=messages)
+                output = response["choices"][0]["message"]["content"]
+                messages.append({"role": "assistant", "content": output})
+                print("\n" + output + "\n")
 
-            output_Text += "\n<font color=\"#209de0\">AI:</font>"+ " "+ "<font color=\"#76b8db\">" + output +"</font>"
-            output_Textbox.set_text(output_Text) #Write into Textbox_Output
-            UI_MANAGER.draw_ui(screen)  # Draw the UI elements
-            pygame.display.update()  # Update the display
+                output_Text += "\n<font color=\"#209de0\">AI:</font>"+ " "+ "<font color=\"#76b8db\">" + output +"</font>"
+                output_Textbox.set_text(output_Text) #Write into Textbox_Output
+                UI_MANAGER.draw_ui(screen)  # Draw the UI elements
+                pygame.display.update()  # Update the display
 
-
-            thread = threading.Thread(target=tts_thread, args=(output, useWindowsSound, tts_engine))
-            thread.start()
-
-
-            #DEL  if(useWindowsSound):
-            #     #TTS Windows:
-            #     tts_engine.Speak(output)
-            # else:
-            #     #TTS Google:
-            #     mp3_fp = BytesIO()
-            #     tts = gTTS(output, lang='en')
-            #     tts.write_to_fp(mp3_fp)
-            #     mp3_fp.seek(0)
-            #     pygame.mixer.music.load(mp3_fp, 'mp3')
-            #     pygame.mixer.music.play()
-
+                thread = threading.Thread(target=tts_thread, args=(output, useWindowsSound, tts_engine))
+                thread.start()
         
         if ((event.type == pygame_gui.UI_BUTTON_PRESSED and
             event.ui_object_id == '#record_button') or (event.type == pygame.KEYDOWN and event.key == K_LALT)):
@@ -344,13 +292,6 @@ while running:
 
 
                 print(transcript.text)
-              
-                # messages.append({"role": "user", "content": transcript.text})
-                # response = openai.ChatCompletion.create(
-                #     model="gpt-3.5-turbo",
-                #     messages=messages)
-                # output = response["choices"][0]["message"]["content"]
-                # messages.append({"role": "assistant", "content": output})
 
         UI_MANAGER.process_events(event)
     UI_MANAGER.update(UI_REFRESH_RATE)
