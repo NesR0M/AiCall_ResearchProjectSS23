@@ -5,12 +5,13 @@ import threading
 import pyaudio
 import wave
 import threading
+import difflib
 from personal_key import API_KEY
 from socketClient import stablePicture
 from pygame.locals import K_LALT
 from pygame_gui.elements.ui_text_box import UITextBox
 from pygame_gui import UI_TEXT_ENTRY_CHANGED
-from prompting import imageGen4, imageGen8, imageGen6_1, imageGenForcedPreface, scenario, scenarioGER
+from prompting import imageGen4, imageGen8, imageGen6_1, imageGenForcedPreface, scenario, scenarioGER, correctionGER
 
 useWindowsSound = True
 if(useWindowsSound):
@@ -28,7 +29,7 @@ useImageGenPreface = False
 output_Text = ""
 
 
-def tts_thread(output, useWindowsSound, tts_engine):
+def tts_thread(output, useWindowsSound):
     if useWindowsSound:
         # TTS Windows:
         tts_engine.Speak(output)
@@ -53,13 +54,14 @@ pygame.init()
 pygame.mixer.init()
 
 # create a TTS engine using Windows 10 integrated TTS
-tts_engine = wincl.Dispatch("SAPI.SpVoice")
-for voice in tts_engine.GetVoices():
-    if voice.GetDescription().startswith('Microsoft Katja'):
-        tts_engine.Voice = voice
-        break
-tts_engine.Rate = 0
-tts_engine.Volume = 100
+if(useWindowsSound):
+    tts_engine = wincl.Dispatch("SAPI.SpVoice")
+    for voice in tts_engine.GetVoices():
+        if voice.GetDescription().startswith('Microsoft Katja'):
+            tts_engine.Voice = voice
+            break
+    tts_engine.Rate = 0
+    tts_engine.Volume = 100
 
 
 # Set up the display
@@ -121,7 +123,7 @@ screen.fill(background_color)
 pygame.display.flip()
 
 
-# One time GPT Call:
+# One time GPT stable Call:
 def askGPT(structure, preface, prompt):
     task = []
     task.append({"role": "user", "content": structure+prompt}) # task: "Create a stable diffusion prompt out of this: "
@@ -132,6 +134,31 @@ def askGPT(structure, preface, prompt):
     usedprompt = preface + output
     print("The Stable prompt is: " + usedprompt)
     return usedprompt
+
+# One time GPT correction Call:
+def askGPTforCorrection(structure, prompt):
+    task = []
+    task.append({"role": "user", "content": structure+prompt}) # task: "Correct this sentence: "
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=task)
+    output = response["choices"][0]["message"]["content"]
+    print("Die Korrektur lautet: " + output)
+    return output
+
+def highlight_differences(str1, str2):
+    diff = difflib.ndiff(str1.split(), str2.split())
+    highlighted_diff = []
+
+    for item in diff:
+        if item.startswith('-'):
+            highlighted_diff.append('<u><font color=\"#FF0000\">' + item[2:] + '</font></u>')
+        elif item.startswith('+'):
+            highlighted_diff.append('<i><font color=\"#ecb20b\">' + item[2:] + '</font></i>')
+        else:
+            highlighted_diff.append(item)
+
+    return ' '.join(highlighted_diff)
 
 # Load an image:
 def loadImage(name):
@@ -238,8 +265,10 @@ while running:
                 print("Answer is triggerd")
 
                 text = event.text
-                print(text)
-                output_Text += "\n<font color=\"#FF0000\">YOU:</font>" +" "+ "<font color=\"#ff8c8c\">" + text +"</font>"
+                correctText = highlight_differences(text, askGPTforCorrection(correctionGER, text))
+                print(correctText)
+
+                output_Text += "\n<font color=\"#FF0000\">YOU:</font>" +" "+ "<font color=\"#ffeeee\">" + correctText+"</font>"
                 output_Textbox.set_text(output_Text) #Write into Textbox_Output
 
                 if event.text == "stop":
@@ -265,7 +294,7 @@ while running:
                 UI_MANAGER.draw_ui(screen)  # Draw the UI elements
                 pygame.display.update()  # Update the display
 
-                thread = threading.Thread(target=tts_thread, args=(output, useWindowsSound, tts_engine))
+                thread = threading.Thread(target=tts_thread, args=(output, useWindowsSound))
                 thread.start()
         
         if ((event.type == pygame_gui.UI_BUTTON_PRESSED and
