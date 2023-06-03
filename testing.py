@@ -1,23 +1,45 @@
-import difflib
+def highlight_diffs(original, corrected):
+    original = original.replace('.', '')  # Remove periods from original sentence
+    corrected = corrected.replace('.', '')  # Remove periods from corrected sentence
 
-def highlight_differences(str1, str2):
-    diff = difflib.ndiff(str1.split(), str2.split())
-    highlighted_diff = []
+    original_words = original.split()
+    corrected_words = corrected.split()
 
-    for item in diff:
-        if item.startswith('-'):
-            highlighted_diff.append('<u><font color=\"#FF0000\">' + item[2:] + '</font></u>')
-        elif item.startswith('+'):
-            highlighted_diff.append('<i><font color=\"#ecb20b\">' + item[2:] + '</font></i>')
+    result = ""
+    i = 0
+    j = 0
+    while i < len(original_words) and j < len(corrected_words):
+        if original_words[i] != corrected_words[j]:
+            incorrect = []
+            correct = []
+            while (i < len(original_words) and j < len(corrected_words) and 
+                   original_words[i] != corrected_words[j]):
+                incorrect.append(original_words[i])
+                correct.append(corrected_words[j])
+                i += 1
+                j += 1
+            
+            result += "<u>" + " ".join(incorrect) + "</u> "
+            result += "<i>" + " ".join(correct) + "</i> "
         else:
-            highlighted_diff.append(item[2:])  # Exclude the + or - prefix
+            result += original_words[i] + " "
+            i += 1
+            j += 1
 
-    return ' '.join(highlighted_diff)
+    # If there are remaining words in original sentence
+    while i < len(original_words):
+        result += "<u>" + original_words[i] + "</u> "
+        i += 1
 
-# Example usage
-sentence1 = "Gib mir Bier schnell!"
-sentence2 = "Gib mir bitte jetzt ein Bier!"
+    # If there are remaining words in corrected sentence
+    while j < len(corrected_words):
+        result += "<i>" + corrected_words[j] + "</i> "
+        j += 1
 
-highlighted_sentence = highlight_differences(sentence1, sentence2)
-print(highlighted_sentence)
+    return result
+
+original = "Ich will essen ein Eis jetzt sofort."
+corrected = "Ich will jetzt ein Eis essen sofort."
+print(highlight_diffs(original, corrected))
+
 

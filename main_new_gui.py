@@ -126,7 +126,7 @@ pygame.display.flip()
 # One time GPT stable Call:
 def askGPT(structure, preface, prompt):
     task = []
-    task.append({"role": "user", "content": structure+prompt}) # task: "Create a stable diffusion prompt out of this: "
+    task.append({"role": "user", "content": structure+prompt+" happy"}) # task: "Create a stable diffusion prompt out of this: "
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=task)
@@ -146,19 +146,49 @@ def askGPTforCorrection(structure, prompt):
     print("Die Korrektur lautet: " + output)
     return output
 
-def highlight_differences(str1, str2):
-    diff = difflib.ndiff(str1.split(), str2.split())
-    highlighted_diff = []
+def highlight_differences(original, corrected):
+    original = original.replace('.', '')  # Remove periods from original sentence
+    corrected = corrected.replace('.', '')  # Remove periods from corrected sentence
 
-    for item in diff:
-        if item.startswith('-'):
-            highlighted_diff.append('<u><font color=\"#FF0000\">' + item[2:] + '</font></u>')
-        elif item.startswith('+'):
-            highlighted_diff.append('<i><font color=\"#ecb20b\">' + item[2:] + '</font></i>')
+    original_words = original.split()
+    corrected_words = corrected.split()
+
+    result = ""
+    i = 0
+    j = 0
+    while i < len(original_words) and j < len(corrected_words):
+        if original_words[i] != corrected_words[j]:
+            incorrect = []
+            correct = []
+            while (i < len(original_words) and j < len(corrected_words) and 
+                   original_words[i] != corrected_words[j]):
+                incorrect.append(original_words[i])
+                correct.append(corrected_words[j])
+                i += 1
+                j += 1
+            
+            result += "<u><font color=\"#FF0000\">" + " ".join(incorrect) + "</font></u> "
+            result += "<i><font color=\"#ecb20b\">" + " ".join(correct) + "</font></i> "
         else:
-            highlighted_diff.append(item)
+            result += original_words[i] + " "
+            i += 1
+            j += 1
 
-    return ' '.join(highlighted_diff)
+    # If there are remaining words in original sentence
+    while i < len(original_words):
+        result += "<u>" + original_words[i] + "</u> "
+        i += 1
+
+    # If there are remaining words in corrected sentence
+    while j < len(corrected_words):
+        result += "<i>" + corrected_words[j] + "</i> "
+        j += 1
+
+    return result
+
+def correctOutput(string1, string2):
+    result = string1 + " // " +"<u><font color=\"#ecb20b\">" + string2 + "</font></u>"
+    return result
 
 # Load an image:
 def loadImage(name):
@@ -265,7 +295,8 @@ while running:
                 print("Answer is triggerd")
 
                 text = event.text
-                correctText = highlight_differences(text, askGPTforCorrection(correctionGER, text))
+                #DEL: correctText = highlight_differences(text, askGPTforCorrection(correctionGER, text))
+                correctText = correctOutput(text, askGPTforCorrection(correctionGER, text))
                 print(correctText)
 
                 output_Text += "\n<font color=\"#FF0000\">YOU:</font>" +" "+ "<font color=\"#ffeeee\">" + correctText+"</font>"
