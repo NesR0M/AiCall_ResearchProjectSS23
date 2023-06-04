@@ -1,4 +1,4 @@
-API_KEY = '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'
+API_KEY = ''
 
 #PICTURE_HOST = '0.0.0.0' # mine
 PICTURE_HOST = '193.81.119.51' # davids

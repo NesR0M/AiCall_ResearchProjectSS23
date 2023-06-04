@@ -52,6 +52,9 @@ def stablediff_thread(iteration, imageGen, preface, userInput):
 pygame.init()
 pygame.mixer.init()
 
+#add feedback sound
+feedbackSound = pygame.mixer.Sound('Click.mp3')
+
 # create a TTS engine using Windows 10 integrated TTS
 if(useWindowsSound):
     tts_engine = wincl.Dispatch("SAPI.SpVoice")
@@ -109,6 +112,8 @@ record_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((button_x
                                              text="Record",
                                              object_id='#record_button',
                                              manager=UI_MANAGER)
+
+#TODO: UITextBox <img src="microphone.jpg" float=right
 
 TEXT_INPUT.focus()
 
@@ -238,6 +243,12 @@ iteration = 0
 audio_frames = []
 is_recording = False
 
+#microphone icon
+#mic_icon = pygame.image.load('microphone.jpg')
+#mic_icon = pygame.transform.scale(mic_icon, button_size)
+#screen.blit(mic_icon, (button_x, button_y))
+
+
 while running:
     UI_REFRESH_RATE = CLOCK.tick(60)/1000.0
 
@@ -288,12 +299,21 @@ while running:
         elif (event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and
             event.ui_object_id == '#text_entry' and promptSet):
 
+            
+
             if event.text == "":
                 print("Empty input is skipped")
             else:
                 print("Answer is triggerd")
 
                 text = event.text
+
+                feedbackSound.play()
+                TEXT_INPUT.set_text("")
+                TEXT_INPUT.redraw()
+                UI_MANAGER.draw_ui(screen) 
+                pygame.display.update()
+
                 correctText = correctOutput(text, askGPTforCorrection(correctionGER, text))
                 print(correctText)
 
@@ -305,10 +325,6 @@ while running:
                     break
                 messages.append({"role": "user", "content": text})
 
-                TEXT_INPUT.set_text("")
-                TEXT_INPUT.redraw()
-                UI_MANAGER.draw_ui(screen)
-                pygame.display.update()
 
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
