@@ -5,7 +5,6 @@ import threading
 import pyaudio
 import wave
 import threading
-import difflib
 from personal_key import API_KEY
 from socketClient import stablePicture
 from pygame.locals import K_LALT
@@ -295,7 +294,6 @@ while running:
                 print("Answer is triggerd")
 
                 text = event.text
-                #DEL: correctText = highlight_differences(text, askGPTforCorrection(correctionGER, text))
                 correctText = correctOutput(text, askGPTforCorrection(correctionGER, text))
                 print(correctText)
 
@@ -342,16 +340,20 @@ while running:
                 is_recording = False
                 recording_thread.join()
                 save_audio_to_file()
+
+                duration = 0
+                with wave.open("sound/output.wav") as currentA:
+                    duration = currentA.getnframes() / currentA.getframerate()
                 
                 #send file to whisper
-                audio_file= open("sound/output.wav", "rb")
-                transcript = openai.Audio.transcribe("whisper-1", audio_file)
-                TEXT_INPUT.set_text(transcript.text)
-                TEXT_INPUT.focus()
-                #TODO event.type = pygame_gui.UI_TEXT_ENTRY_FINISHED
-
-
-                print(transcript.text)
+                audio_file = open("sound/output.wav", "rb")
+                if  duration > 1:
+                    transcript = openai.Audio.transcribe("whisper-1", audio_file)
+                    TEXT_INPUT.set_text(transcript.text)
+                    TEXT_INPUT.focus()
+                    print(transcript.text)
+                else:
+                    print("Audio duration under limit")
 
         UI_MANAGER.process_events(event)
     UI_MANAGER.update(UI_REFRESH_RATE)
