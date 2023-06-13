@@ -10,6 +10,7 @@ from socketClient import stablePicture
 from pygame.locals import K_LALT
 from pygame_gui.elements.ui_text_box import UITextBox
 from pygame_gui import UI_TEXT_ENTRY_CHANGED
+from pygame_gui import UI_TEXT_BOX_LINK_CLICKED, UI_TEXT_EFFECT_FINISHED
 from prompting import imageGen4, imageGen8, imageGen6_1, imageGenForcedPreface, scenario, scenarioGER, correctionGER
 
 useWindowsSound = True
@@ -113,6 +114,12 @@ record_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((button_x
                                              object_id='#record_button',
                                              manager=UI_MANAGER)
 
+# Button to expand Textfield
+text_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((button_x+(button_size[0]), button_y), ((button_size[0]/2),(button_size[1]/2))),
+                                             text="T",
+                                             object_id='#text_button',
+                                             manager=UI_MANAGER)
+
 #TODO: UITextBox <img src="microphone.jpg" float=right
 
 TEXT_INPUT.focus()
@@ -138,6 +145,11 @@ def askGPT(structure, preface, prompt):
     usedprompt = preface + output
     print("The Stable prompt is: " + usedprompt)
     return usedprompt
+
+def format_string_for_DeepL(input_string):
+    url = "https://www.deepl.com/translator#de/en/"
+    formatted_string = input_string.replace(" ", "%20")
+    return url + formatted_string
 
 # One time GPT correction Call:
 def askGPTforCorrection(structure, prompt):
@@ -242,6 +254,7 @@ iteration = 0
 
 audio_frames = []
 is_recording = False
+show_Text = False
 
 #microphone icon
 #mic_icon = pygame.image.load('microphone.jpg')
@@ -261,7 +274,7 @@ while running:
 
             # Process the entered text
             print("The prompt is: "+ event.text)
-            messages.append({"role": "system", "content": scenarioGER + event.text}) # Prompt
+            messages.append({"role": "system", "content": scenario + event.text}) # Prompt
             promptSet = True
 
             # Let Stable Diffusion create an Image
@@ -334,7 +347,7 @@ while running:
                 messages.append({"role": "assistant", "content": output})
                 print("\n" + output + "\n")
 
-                output_Text += "\n<font color=\"#209de0\">AI:</font>"+ " "+ "<font color=\"#76b8db\">" + output +"</font>"
+                output_Text += "\n<font color=\"#209de0\">AI:</font>"+ " "+ "<font color=\"#76b8db\">" + "<a href="+format_string_for_DeepL(output)+">"+output+"</a></font>"
                 output_Textbox.set_text(output_Text) #Write into Textbox_Output
                 UI_MANAGER.draw_ui(screen)  # Draw the UI elements
                 pygame.display.update()  # Update the display
@@ -370,6 +383,25 @@ while running:
                     print(transcript.text)
                 else:
                     print("Audio duration under limit")
+
+        if (event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_object_id == '#text_button'):
+            if not show_Text:
+                record_button.set_text("v T")
+                show_Text = True
+                #ADD CODE HERE GPT
+            else:
+                record_button.set_text("T")
+                show_Text = False
+                #ADD CODE HERE GPT
+
+        if event.type == UI_TEXT_BOX_LINK_CLICKED:
+            if event.ui_element is output_Textbox:
+                if event.link_target == 'test':
+                    print('clicked test link')
+            else:
+                print('clicked link in text block 1')
+
+
 
         UI_MANAGER.process_events(event)
     UI_MANAGER.update(UI_REFRESH_RATE)
