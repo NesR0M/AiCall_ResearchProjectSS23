@@ -19,10 +19,10 @@ def receive_image(server_socket, image_path):
 
 def demo():
     # Set the source file path
-    src_file = "images/example.png"
+    src_file = "images/example_new.png"
 
     # Set the destination file path
-    dst_file = "images/copy_example.png"
+    dst_file = "images/copy_example_new.png"
 
     # Open the source PNG file for reading
     with open(src_file, 'rb') as fsrc:

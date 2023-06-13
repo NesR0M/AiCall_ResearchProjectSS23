@@ -1,0 +1,62 @@
+{ 
+    "#text_output":{
+        "colours":
+        {
+            "normal_border": "#00000000",
+            "link_hover": "#d77aff",
+            "link_selected": "#FFFFFF"
+        },
+
+        "misc":
+        {
+            "border_width": "0",
+            "link_normal_underline": "0",
+            "link_hover_underline": "1"
+        }
+    },
+    "#record_button": {
+        "images": {
+            "normal_image": {
+                "path": "images/microphone.png",
+                "sub_surface_rect": "0,0,80,80"
+            },
+            "selected_image": {
+                "path": "images/microphone.png",
+                "sub_surface_rect": "80,0,80,80"
+            }
+        },
+        "misc":{
+            "shape": "ellipse"
+        }
+    },
+    "#text_button": {
+        "colours":
+         {
+             "normal_bg": "#00000000",
+             "hovered_bg": "#00000000",
+             "selected_bg": "#00000000",
+             "normal_border": "#00000000",
+             "hovered_border": "#00000000",
+             "selected_border": "#00000000"
+         },
+        "images": {
+            "normal_image": {
+                "path": "images/text2.png",
+                "sub_surface_rect": "0,0,40,40"
+            },
+            "selected_image": {
+                "path": "images/text2.png",
+                "sub_surface_rect": "40,0,40,40"
+            }
+        }
+        
+    },
+    "#panel":
+    {
+        "background_image":
+        {
+            "path": "images/output_0.png",
+            "sub_surface_rect": "0,0,384,768"
+        }
+    }
+}
