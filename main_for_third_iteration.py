@@ -27,7 +27,7 @@ translator = deepl.Translator(DEEPL_API_KEY)
 messages = []
 storyGen = storyGen1
 imageGen = imageGen10 
-useImageGenPreface = True
+useImageGenPreface = False
 
 outputLinkText = ""
 output_Text = ""
@@ -178,7 +178,7 @@ def askGPT(structure, preface, prompt, reason):
     task.append({"role": "user", "content": prompt+structure}) # task: "Create a stable diffusion prompt out of this: "
     try:
         response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-0613",
+        model="gpt-4-0314",
         messages=task)
         output = response["choices"][0]["message"]["content"]
         usedprompt = ""
@@ -203,7 +203,7 @@ def askGPTForCorrection(structure, prompt):
     task.append({"role": "user", "content": structure+prompt}) # task: "Correct this sentence: "
     try:
         response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-0613",
+        model="gpt-4-0314",
         messages=task)
         output = response["choices"][0]["message"]["content"]
         print("Die Korrektur lautet: " + output)

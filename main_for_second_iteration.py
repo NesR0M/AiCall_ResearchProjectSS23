@@ -11,7 +11,7 @@ from pygame.locals import K_LALT
 from pygame_gui.elements.ui_text_box import UITextBox
 from pygame_gui import UI_TEXT_ENTRY_CHANGED
 from pygame_gui import UI_TEXT_BOX_LINK_CLICKED, UI_TEXT_EFFECT_FINISHED
-from prompting import imageGen4, imageGen8, imageGen6_1, imageGenForcedPreface, scenario, scenarioGER, correctionGER
+from prompting import imageGen4, imageGen8, imageGen6_1, imageGenForcedPreface, scenario, correctionGER
 
 useWindowsSound = True
 if(useWindowsSound):
